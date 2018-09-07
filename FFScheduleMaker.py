@@ -125,25 +125,25 @@ def add_next_game():
     return True # made it to end of schedule. gg
     
 def check_game(game, week):
-    #print("Checking game..." + str(game))
+    print("Checking game..." + str(game))
     if divisional_game(game):
-        #print("Good game.")
+        print("Good game.")
         return True
     elif non_division_games_per_team[game[0]] < max_non_division_games and non_division_games_per_team[game[1]] < max_non_division_games:
         if home_games_per_team[game[0]] < max_home_games and away_games_per_team[game[1]] < max_away_games:
             if [game[1], game[0]] in all_games:
             # they have played all other division games
                 if played_all_non_div_teams(game[0]) and played_all_non_div_teams(game[1]):
-                    #print("Good game.")
+                    print("Good game.")
                     return True
             else:
-                #print("Good game.")
+                print("Good game.")
                 return True
-    #print("Bad game.")
+    print("Bad game.")
     return False
                         
 def add_game(game, week):
-    #print("Adding game..." + str(game))
+    print("Adding game..." + str(game))
     schedule[week].append(game)
     all_games.append(game)
     if not divisional_game(game):
@@ -158,7 +158,7 @@ def add_game(game, week):
             print(schedule[week])
 
 def divisional_game(game):
-    #print("Checking divisional...")
+    print("Checking divisional...")
     for division in league:
         if game[0] in league[division]:
             if game[1] in league[division]:
@@ -167,7 +167,7 @@ def divisional_game(game):
                 return False
 
 def remove_game(game, week):
-    #print("Removing game..." + str(game))
+    print("Removing game..." + str(game))
     schedule[week].remove(game)
     all_games.remove(game)
     if not divisional_game(game):
