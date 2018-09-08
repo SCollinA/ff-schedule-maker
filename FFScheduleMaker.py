@@ -63,17 +63,18 @@ for division in league:
 print(league)
 print(weeks_of_regular_season)
 print(weeks_of_playoffs)
+sleep(3)
 
 schedule = {}
 non_division_games_per_team = {}
 home_games_per_team = {}
 away_games_per_team = {}
-possible_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
 divisional_games = []
 for division in league:
     divisional_games += [[home_team, away_team] for home_team in league[division] for away_team in league[division] if home_team is not away_team]
+possible_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
 all_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
-checked_games = []
+checked_games = {}
 max_division_games = (teams_per_division - 1) * 2
 max_non_division_games = weeks_of_regular_season - max_division_games
 max_home_games = (weeks_of_regular_season / 2) if (weeks_of_regular_season % 2 == 0) else ((weeks_of_regular_season / 2) + 1)
@@ -83,7 +84,8 @@ for team in all_teams:
     home_games_per_team[team] = 0 # max is number of total games / 2 or (num of games / 2) + 1 if odd num of games
     away_games_per_team[team] = 0
 for i in range(1, weeks_of_regular_season + 1):
-    schedule["Week" + str(i)] = [] # schedule is dictionary of weekly keys with lists of tuples of games that week
+    schedule["Week" + str(i)] = [] # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
+    checked_games["Week" + str(i)] = []
 
 
 
@@ -100,50 +102,52 @@ for i in range(1, weeks_of_regular_season + 1):
 
 def add_next_game():
     for week in schedule: # check each week of schedule
-        games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team if [home_team, away_team] not in all_games]
+        # if week is complete, clear checked games for next week
+        for this_week in schedule:
+            if len(schedule[this_week]) == 0: # if the week is empty (because this is the first game added to it, clear it's checked games)
+                checked_games[this_week].clear()
+                break
+        games =  [game for game in possible_games if game not in all_games]# possible games haven't been played, haven't been checked, and don't have teams playing that week
         while len(schedule[week]) < len(all_teams) / 2: # if the week is not full yet
-            if len(schedule[week]) > 0:
-                for each_game in schedule[week]:
-                    games = [game for game in games if each_game[0] not in game if each_game[1] not in game if game not in checked_games]
-            else:
-                games = [game for game in games if game not in checked_games]
-            """ print("Possible choices = " + str(len(games)))
-            print(games)
-            print("Choices checked = " + str(len(checked_games)))
-            print(checked_games) """
-            if len(games) == 0:
-                #print("Bad Path --------------------")
+            games = [game for game in games if game not in checked_games[week] if game not in all_games]
+            if len(schedule[week]) > 0: # if a game has been added to week
+                for each_game in schedule[week]: # don't add other games with those teams to week
+                    games = [game for game in games if each_game[0] not in game if each_game[1] not in game]
+            #print("Possible choices = " + str(len(games)))
+            #print(games)
+            if len(games) == 0: # checked all possible games
                 return False
             #print("Choosing game...")
             game = choice(games) # pick a random game from the pool of possible games
-            checked_games.append(game)
+            checked_games[week].append(game)
             if check_game(game, week): # check to see if its a good game
+                #checked_games[week].remove(game) # good game, do not keep on checked list
                 add_game(game, week) # add the game to the schedule
                 if not add_next_game(): # if you can not find the next game to add, using the remaining games
-                    checked_games.append(schedule[week][-1])
-                    remove_game(schedule[week][-1], week) # take the game that was just added off the schedule
+                    checked_games[week].append(game) #add that game back to checked list
+                    remove_game(game, week) # take the last game that was just added off the schedule
     return True # made it to end of schedule. gg
     
 def check_game(game, week):
-    print("Checking game..." + str(game))
+    #print("Checking game..." + str(game))
     if divisional_game(game):
-        print("Good game.")
+        #print("Good game.")
         return True
     elif non_division_games_per_team[game[0]] < max_non_division_games and non_division_games_per_team[game[1]] < max_non_division_games:
         if home_games_per_team[game[0]] < max_home_games and away_games_per_team[game[1]] < max_away_games:
             if [game[1], game[0]] in all_games:
             # they have played all other division games
                 if played_all_non_div_teams(game[0]) and played_all_non_div_teams(game[1]):
-                    print("Good game.")
+                    #print("Good game.")
                     return True
             else:
-                print("Good game.")
+                #print("Good game.")
                 return True
-    print("Bad game.")
+    #print("Bad game.")
     return False
                         
 def add_game(game, week):
-    print("Adding game..." + str(game))
+    #print("Adding game..." + str(game))
     schedule[week].append(game)
     all_games.append(game)
     if not divisional_game(game):
@@ -156,9 +160,11 @@ def add_game(game, week):
         if len(schedule[week]) > 0:
             print(week)
             print(schedule[week])
+            #print("Choices checked = " + str(len(checked_games[week])))
+            #print(checked_games[week])
 
 def divisional_game(game):
-    print("Checking divisional...")
+    #print("Checking divisional...")
     for division in league:
         if game[0] in league[division]:
             if game[1] in league[division]:
@@ -167,7 +173,7 @@ def divisional_game(game):
                 return False
 
 def remove_game(game, week):
-    print("Removing game..." + str(game))
+    #print("Removing game..." + str(game))
     schedule[week].remove(game)
     all_games.remove(game)
     if not divisional_game(game):
@@ -177,6 +183,10 @@ def remove_game(game, week):
         divisional_games.append(game)
     home_games_per_team[game[0]] -= 1
     away_games_per_team[game[1]] -= 1
+
+    for week in schedule:
+        print(week)
+        print(schedule[week])
 
 def played_all_non_div_teams(team):
     non_div_games = 0
