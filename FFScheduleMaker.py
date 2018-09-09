@@ -22,7 +22,7 @@ minimum_weeks_of_regular_season = (teams_per_division - 1) * 2
 
 while True:
     number_of_playoff_teams = int(input("Enter number of playoff teams: ")) # no greater than number of teams, no less than 2 # will be used to determine number of weeks of play # must also be less than twice the number of teams in division. max playoff rounds is 4 for 16 teams, so 16 team division needs 4 divisions. 14 team league can have 2 weeks playoffs
-    if number_of_playoff_teams > number_of_teams or number_of_playoff_teams < 2 or number_of_playoff_teams > (16 - minimum_weeks_of_regular_season) * 2:
+    if number_of_playoff_teams > number_of_teams or number_of_playoff_teams < 2:# or number_of_playoff_teams > (16 - minimum_weeks_of_regular_season) * 2:
         print("Playoff teams must be at least 2 and less than total number of teams.")
     else:
         break
@@ -105,7 +105,7 @@ def add_next_game():
         # if week is complete, clear checked games for next week
         for this_week in schedule:
             if len(schedule[this_week]) == 0: # if the week is empty (because this is the first game added to it, clear it's checked games)
-                checked_games[this_week].clear()
+                checked_games[this_week].clear() # checked games accumulate in earlier weeks, weeding out bad paths sooner
                 break
         games =  [game for game in possible_games if game not in all_games]# possible games haven't been played, haven't been checked, and don't have teams playing that week
         while len(schedule[week]) < len(all_teams) / 2: # if the week is not full yet
@@ -136,7 +136,7 @@ def check_game(game, week):
     elif non_division_games_per_team[game[0]] < max_non_division_games and non_division_games_per_team[game[1]] < max_non_division_games:
         if home_games_per_team[game[0]] < max_home_games and away_games_per_team[game[1]] < max_away_games:
             if [game[1], game[0]] in all_games:
-            # they have played all other division games
+            # they have played all other non division games
                 if played_all_non_div_teams(game[0]) and played_all_non_div_teams(game[1]):
                     #print("Good game.")
                     return True
@@ -160,8 +160,8 @@ def add_game(game, week):
         if len(schedule[week]) > 0:
             print(week)
             print(schedule[week])
-            #print("Choices checked = " + str(len(checked_games[week])))
-            #print(checked_games[week])
+            print("Choices checked = " + str(len(checked_games[week])))
+            print(checked_games[week])
 
 def divisional_game(game):
     #print("Checking divisional...")
