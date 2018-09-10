@@ -26,7 +26,7 @@ while True:
         print("Playoff teams must be at least 2 and less than total number of teams.")
     else:
         break
-print("Hello")
+
 def playoff_rounds(number_of_playoff_teams):
     num_teams = number_of_playoff_teams
     rounds_of_playoffs = 0
@@ -37,7 +37,7 @@ def playoff_rounds(number_of_playoff_teams):
             rounds_of_playoffs += 1
         num_teams /= 2
     return rounds_of_playoffs
-
+print("hello")
 weeks_of_playoffs = playoff_rounds(number_of_playoff_teams)
 weeks_of_regular_season = 16 - weeks_of_playoffs 
 
