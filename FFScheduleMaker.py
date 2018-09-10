@@ -26,7 +26,7 @@ while True:
         print("Playoff teams must be at least 2 and less than total number of teams.")
     else:
         break
-
+print("Hello")
 def playoff_rounds(number_of_playoff_teams):
     num_teams = number_of_playoff_teams
     rounds_of_playoffs = 0
