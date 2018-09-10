@@ -3,6 +3,7 @@
 from random import choice
 from time import sleep
 import sys
+import copy
 
 while True:
     number_of_teams = int(input("Enter an even number of teams between 8 and 16: ")) # 8 - 16
@@ -68,7 +69,7 @@ away_games_per_team = {}
 
 all_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
 scheduled_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
-checked_games = {}
+checked_path = {}
 
 max_division_games = (teams_per_division - 1) * 2
 max_non_division_games = weeks_of_regular_season - max_division_games
@@ -82,31 +83,31 @@ for team in all_teams:
 
 for i in range(1, weeks_of_regular_season + 1):
     schedule["Week" + str(i)] = [] # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
-    checked_games["Week" + str(i)] = []
+    checked_path["Week" + str(i)] = []
 
-def add_next_game():
+def add_next_game(path):
+    checked_games = copy.deepcopy(path) # create new path just for this branch
     for week in schedule: # go through weeks of schedule one by one
-        if len(schedule[week]) == 0 and week is not "Week1": # if the schedule is empty that week
-            checked_games[week].clear() # clear checked games for that week
         while len(schedule[week]) < len(all_teams) / 2: # while the week is not full, continue choosing, checking, adding games
-            possible_games = find_games(all_games, week)
+            possible_games = find_games(all_games, week, checked_games[week])
             if len(possible_games) == 0: # if no games are possible
                 return False
             game = choice(possible_games) # choose game for this week
             checked_games[week].append(game) # add game to checked_games for this week
             if check_game(game, week): # if game fits scheduling rules
                 add_game(game, week) # add game to schedule for that week
-                if not add_next_game(): # try to add next game, if it returns bad path
-                    remove_game(game, week) # remove that game (i.e. take a step back on path)
+                if not add_next_game(checked_games): # try to add next game, passing current path, and if it returns bad path
+                    remove_game(game, week) # remove that game (i.e. take a step back on path), but keep it checked
+                    print(len(checked_games[week]))
     return True
 
-def find_games(possible_games, week): # determines which games are allowable
+def find_games(possible_games, week, checked_games): # determines which games are allowable
     scheduled_teams = []
     for game in schedule[week]:
         scheduled_teams.append(game[0])
         scheduled_teams.append(game[1])
     possible_games = [game for game in possible_games if game not in scheduled_games] # games not scheduled this season
-    possible_games = [game for game in possible_games if game not in checked_games[week]] # games not checked this week
+    possible_games = [game for game in possible_games if game not in checked_games] # games not checked this week
     possible_games = [game for game in possible_games if game[0] not in scheduled_teams and game[1] not in scheduled_teams] # games without teams scheduled this week
     return possible_games
 
@@ -134,9 +135,6 @@ def add_game(game, week): # adds a new game to the schedule
     home_games_per_team[game[0]] += 1
     away_games_per_team[game[1]] += 1
 
-    print(week)
-    print(schedule[week])
-
 def remove_game(game, week): # removes the first game added to all_games
     #print("Removing game... " + str(game))
     schedule[week].remove(game)
@@ -146,6 +144,9 @@ def remove_game(game, week): # removes the first game added to all_games
         non_division_games_per_team[game[1]] -= 1
     home_games_per_team[game[0]] -= 1
     away_games_per_team[game[1]] -= 1
+
+    print(week)
+    print(schedule[week])
 
 def divisional_game(game): # checks if a matchup is a divisional game
     for division in league:
@@ -166,12 +167,9 @@ def played_all_non_div_teams(team): # checks if team has played all non-division
         return False
 
 
-if not add_next_game(): # continue adding games to the schedule until it is complete
-    print("Bad schedule")
-    sys.exit()
-
-for division in league:
-    print(league[division])
-for week in schedule:
-    print(week)
-    print(schedule[week])
+if add_next_game(checked_path): # continue adding games to the schedule until it is complete
+    for division in league:
+        print(league[division])
+    for week in schedule:
+        print(week)
+        print(schedule[week])
