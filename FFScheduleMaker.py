@@ -1,9 +1,9 @@
 """This is an app to create randomized divisions and a random schedule for a fantasy football league. The app takes number of teams, number of divisions, and number of playoff teams as input. All teams must play everyone in their division twice. Non-division opponents are random."""
-
+"""Turns out 8 teams must have at least 4 people in playoffs in 16 week season to avoid playing someone three times.
+Also, a 16 team league cannot have more than 2 rounds of playoffs if only 2 divisions in order to allow playing divisionals twice."
+"""
 from random import choice
 from time import sleep
-import sys
-import copy
 
 while True:
     number_of_teams = int(input("Enter an even number of teams between 8 and 16: ")) # 8 - 16
@@ -14,13 +14,14 @@ while True:
 
 while True:
     number_of_divisions = int(input("Enter number of divisions: ")) # make sure number of teams goes into number of divisions evenly, use drop down to provide appropriate choices # also must be at least 2. 8 teams cannot play each other twice and have playoffs in 16 week season. playoffs is at least 1 week. 14 teams has 2 divisions can only play each other twice with 1 round of playoffs
-    if number_of_teams % number_of_divisions != 0 or number_of_divisions < 2 or number_of_divisions > number_of_teams / 2:
-        print("League must have at least 2 divisions, each with an equal number of teams and at least 2 teams each.") # divisions must have at least 4 teams
+    if number_of_divisions == 0 or number_of_teams % number_of_divisions != 0 or number_of_teams / number_of_divisions < 2:
+        print("Divisions must have an equal number of teams and at least 2 teams each.") # divisions must have at least 2 teams
     else:
         break
 
 teams_per_division = int(number_of_teams / number_of_divisions)
-minimum_weeks_of_regular_season = (teams_per_division - 1) * 2
+minimum_weeks_of_regular_season = (teams_per_division - 1) * 2 if number_of_divisions > 1 else number_of_teams - 1
+maximum_weeks_of_regular_season = (number_of_teams - 1) * 2
 def playoff_rounds(number_of_playoff_teams):
     num_teams = number_of_playoff_teams
     rounds_of_playoffs = 0
@@ -30,9 +31,9 @@ def playoff_rounds(number_of_playoff_teams):
     return rounds_of_playoffs
 
 while True:
-    number_of_playoff_teams = int(input("Enter number of playoff teams: ")) # no greater than number of teams, no less than 2 # will be used to determine number of weeks of play # must also be less than twice the number of teams in division. max playoff rounds is 4 for 16 teams, so 16 team division needs 4 divisions. 14 team league can have 2 weeks playoffs
-    if number_of_playoff_teams > number_of_teams or number_of_playoff_teams < 2 or 16 - minimum_weeks_of_regular_season < playoff_rounds(number_of_playoff_teams):# or number_of_playoff_teams > (16 - minimum_weeks_of_regular_season) * 2:
-        print("Playoff teams must be at least 2 and less than total number of teams.")
+    number_of_playoff_teams = int(input("Enter number of playoff teams: ")) # no greater than number of teams # will be used to determine number of weeks of play # must also be less than twice the number of teams in division. max playoff rounds is 4 for 16 teams, so 16 team division needs 4 divisions. 14 team league can have 2 weeks playoffs
+    if number_of_playoff_teams > number_of_teams or 16 - playoff_rounds(number_of_playoff_teams) < minimum_weeks_of_regular_season or maximum_weeks_of_regular_season + playoff_rounds(number_of_playoff_teams) < 16:# or number_of_playoff_teams > (16 - minimum_weeks_of_regular_season) * 2:
+        print("Playoff teams must be less than total number of teams, allow for minimal regular season, and use entire season.")
     else:
         break
 
@@ -69,7 +70,7 @@ away_games_per_team = {}
 
 all_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
 scheduled_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
-checked_path = {}
+checked_games = {}
 
 max_division_games = (teams_per_division - 1) * 2
 max_non_division_games = weeks_of_regular_season - max_division_games
@@ -83,13 +84,14 @@ for team in all_teams:
 
 for i in range(1, weeks_of_regular_season + 1):
     schedule["Week" + str(i)] = [] # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
-    checked_path["Week" + str(i)] = []
+    checked_games["Week" + str(i)] = []
 
-def add_next_game(path):
-    checked_games = copy.deepcopy(path) # create new path just for this branch
+def add_next_game():
     current_week = 0
     for week in schedule: # go through weeks of schedule one by one
         current_week += 1
+        if len(schedule[week]) == 0: # new week beginning, clear checked games
+            checked_games[week].clear()
         while len(schedule[week]) < len(all_teams) / 2: # while the week is not full, continue choosing, checking, adding games
             possible_games = find_games(all_games, week, checked_games[week])
             if len(possible_games) == 0: # if no games are possible
@@ -98,18 +100,15 @@ def add_next_game(path):
             checked_games[week].append(game) # add game to checked_games for this week
             if check_game(game, week): # if game fits scheduling rules
                 add_game(game, week) # add game to schedule for that week
-                if not add_next_game(checked_games): # try to add next game, passing current path, and if it returns bad path
-                    if len(checked_games[week]) * (weeks_of_regular_season / current_week) > len(all_games) - len(scheduled_games): # if you've checked most of remaining games
-                        clear_week(week) # just clear out the week           
-                    elif game in schedule[week]: # else if game hasn't already been removed
-                        remove_game(game, week) # remove just that game
+                if not add_next_game(): # try to add next game, passing current path, and if it returns bad path    
+                    remove_game(game, week) # remove just that game
     return True
 
 def find_games(possible_games, week, checked_games): # determines which games are allowable
     scheduled_teams = []
     for game in schedule[week]:
         scheduled_teams.append(game[0])
-        scheduled_teams.append(game[1])
+        scheduled_teams.append(game[1]) 
     possible_games = [game for game in possible_games if game not in scheduled_games] # games not scheduled this season
     possible_games = [game for game in possible_games if game not in checked_games] # games not checked this week
     possible_games = [game for game in possible_games if game[0] not in scheduled_teams and game[1] not in scheduled_teams] # games without teams scheduled this week
@@ -152,10 +151,9 @@ def remove_game(game, week): # removes the first game added to all_games
     home_games_per_team[game[0]] -= 1
     away_games_per_team[game[1]] -= 1
 
-def clear_week(week): # clears entire week of games
-    print("Clearing week")
-    while len(schedule[week]) > 0: # while schedule contains games that week
-        remove_game(schedule[week][0], week) # remove the first game from the week
+    print(week)
+    print(schedule[week])
+
 
 def divisional_game(game): # checks if a matchup is a divisional game
     for division in league:
@@ -175,9 +173,9 @@ def played_all_non_div_teams(team): # checks if team has played all non-division
     else:
         return False
 
-
-while not add_next_game(checked_path): # continue adding games to the schedule until it is complete
-    print("Bad schedule")
+while not add_next_game(): # continue adding games to the schedule until it is complete
+    print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
+    sleep(5)
     continue
 
 for division in league:
