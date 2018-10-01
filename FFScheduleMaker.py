@@ -4,6 +4,8 @@ Also, a 16 team league cannot have more than 2 rounds of playoffs if only 2 divi
 """
 from random import choice
 from time import sleep
+import json
+from os import path
 
 while True:
     number_of_teams = int(input("Enter an even number of teams between 8 and 16: ")) # 8 - 16
@@ -177,6 +179,19 @@ while not add_next_game(): # continue adding games to the schedule until it is c
     print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
     sleep(5)
     continue
+else:
+    # if you find a good schedule, write it to file
+    # if schedule is not in schedules file already
+    with open('schedules.json', 'w+', encoding='utf-8') as f:
+        try:
+            schedules_list = json.loads(f.read())
+            print('hello')
+            print(len(schedules_list))
+        except:
+            schedules_list = []
+        if schedule not in schedules_list:
+            schedules_list.append(schedule)
+            f.write(json.dumps(schedules_list))
 
 for division in league:
     print(league[division])
