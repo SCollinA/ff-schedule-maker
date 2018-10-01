@@ -2,6 +2,8 @@
 """Turns out 8 teams must have at least 4 people in playoffs in 16 week season to avoid playing someone three times.
 Also, a 16 team league cannot have more than 2 rounds of playoffs if only 2 divisions in order to allow playing divisionals twice."
 """
+
+'''make program run through every possible schedule, saving each good one until all checked'''
 from random import choice
 from time import sleep
 import json
