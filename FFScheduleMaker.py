@@ -182,17 +182,21 @@ while not add_next_game(): # continue adding games to the schedule until it is c
 else:
     # if you find a good schedule, write it to file
     # if schedule is not in schedules file already
-    with open('schedules.json', 'w+', encoding='utf-8') as f:
-        try:
-            schedules_list = json.loads(f.read())
-            print('hello')
-            print(len(schedules_list))
-        except:
+    # create file if it doesn't exist, only first run
+    if not path.exists('schedules.json'):
+        with open('schedules.json', 'w') as f:
             schedules_list = []
+            f.write(json.dumps(schedules_list))
+    # read file then truncate then append then write file
+    with open('schedules.json', 'r+') as f:
+        schedules_list = json.loads(f.read())
+        print(schedules_list)
+        f.seek(0)
+        f.truncate()
         if schedule not in schedules_list:
             schedules_list.append(schedule)
-            f.write(json.dumps(schedules_list))
-
+        print(len(schedules_list))
+        f.write(json.dumps(schedules_list))
 for division in league:
     print(league[division])
 for week in schedule:
