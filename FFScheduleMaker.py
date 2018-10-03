@@ -185,11 +185,11 @@ def played_all_non_div_teams(team): # checks if team has played all non-division
     else:
         return False
 
-while not add_next_game(): # continue adding games to the schedule until it is complete
-    print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
-    sleep(5)
-    continue
-else:
+while add_next_game(): # continue adding games to the schedule until it is complete
+    # print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
+    # sleep(5)
+    # continue
+# else:
     # if you find a good schedule, write it to file
     # if schedule is not in schedules file already
     # create file if it doesn't exist, only first run
@@ -207,6 +207,9 @@ else:
             schedules_list.append(schedule)
         print(len(schedules_list))
         f.write(json.dumps(schedules_list))
+    sleep(5)
+
+
 for division in league:
     print(league[division])
 for week in schedule:
