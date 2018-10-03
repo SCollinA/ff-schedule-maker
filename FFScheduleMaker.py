@@ -86,6 +86,14 @@ for i in range(1, weeks_of_regular_season + 1):
     schedule["Week" + str(i)] = [] # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
     checked_games["Week" + str(i)] = []
 
+# for new recursive schedule maker
+# choose first game from possible games, remove
+# create fresh possible games only missing first game
+# choose next game from possible games, remove
+# if game doesn't work, go back one game and try next game from possible games
+# again create fresh possible games with last bad game added back, but not existing games
+
+
 def add_next_game():
     current_week = 0
     for week in schedule: # go through weeks of schedule one by one
