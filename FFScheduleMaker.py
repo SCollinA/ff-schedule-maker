@@ -104,7 +104,7 @@ def add_next_game():
             possible_games = find_games(all_games, week, checked_games[week])
             if len(possible_games) == 0: # if no games are possible
                 return False
-            game = choice(possible_games) # choose game for this week
+            game = possible_games[0] # choose game for this week
             checked_games[week].append(game) # add game to checked_games for this week
             if check_game(game, week): # if game fits scheduling rules
                 add_game(game, week) # add game to schedule for that week
