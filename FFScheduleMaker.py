@@ -119,12 +119,12 @@ for team in all_teams:
 
 
 def add_next_game():
+    schedule_done = False
     for week in schedule: # go through weeks of schedule one by one
         week_index = schedule.index(week)
-        if len(week) == 0: # new week beginning, clear checked games
-            checked_games[week_index].clear()
-            print("week clear")
-            # sleep(.5)
+        if week_index != len(schedule) - 1 and len(week) == ((len(all_teams) / 2) - 1): # new week beginning, clear checked games
+            checked_games[week_index + 1].clear()
+            print("week cleared")
         while len(week) < len(all_teams) / 2: # while the week is not full, continue choosing, checking, adding games
             possible_games = find_games(all_games, week_index, checked_games[week_index])
             if len(possible_games) == 0: # if no games are possible
@@ -135,12 +135,12 @@ def add_next_game():
                 add_game(game, week_index) # add game to schedule for that week
                 if not add_next_game(): # try to add next game, passing current path, and if it returns bad path    
                     remove_game(game, week_index) # remove just that game
-    # check to make sure schedule has not been made yet
-    if schedule_exists(schedule):
-        print("schedule exists")
-        return False
-    else:
-        return True
+                else: # if add next game worked schedule is complete
+                    schedule_done = True
+                    break
+        if schedule_done:
+            break
+    return True
 
 def find_games(possible_games, week, checked_games): # determines which games are allowable
     scheduled_teams = []
@@ -221,9 +221,8 @@ def schedule_exists(check_schedule):
         while i < len(a_schedule): # for each week in each schedule
             for game in a_schedule[i]:# for each game in each week
                 # if that game is not in the correspondind week of schedule we are checking
-                if game not in check_schedule[i]:
-                    print(game, schedule[i])
-                    sleep(1)
+                if game not in check_schedule[i]: # games are different
+                    print(game, check_schedule[i]) # break and go to next schedule
                     i = len(a_schedule) # change i to len(schedule) to end checking this schedule
                     break
             if i == len(a_schedule):
@@ -231,16 +230,17 @@ def schedule_exists(check_schedule):
             # all games were found in corresponding week, go to next week
             i += 1
         else: # all weeks in schedule found in checking schedule
-            return True
+            return True # schedule already exists
+    # all schedules have been checked, no match found
     return False
-
 
 while True:
     if add_next_game(): # continue adding games to the schedule until it is complete
-        # print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
-        # sleep(5)
-        # continue
-    # else:
+        # check to make sure schedule has not been made yet
+        if schedule_exists(schedule):
+            print("schedule exists")
+            remove_game(schedule[-1][-1], -1)
+            continue
         # if you find a good schedule, write it to file
         # if schedule is not in schedules file already
         # create file if it doesn't exist, only first run
@@ -277,4 +277,3 @@ for division in league:
     print(division)
 for week in schedule:
     print(week)
-
