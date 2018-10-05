@@ -8,6 +8,7 @@ from random import choice
 from time import sleep
 import json
 from os import path
+from copy import deepcopy
 
 while True:
     number_of_teams = int(input("Enter an even number of teams between 8 and 16: ")) # 8 - 16
@@ -93,8 +94,8 @@ with open('schedules.json', 'r') as f:
 
 if len(schedules_list) > 0: # if there are schedules on file
     print("schedule loaded")
-    sleep(1)
-    schedule = schedules_list[-1] # get the last schedule
+    # sleep(1)
+    schedule = deepcopy(schedules_list[-1]) # get the last schedule
     for week in schedule:
         i = 0
         for game in week: # and add all the games to scheduled games
@@ -123,7 +124,7 @@ def add_next_game():
         if len(week) == 0: # new week beginning, clear checked games
             checked_games[week_index].clear()
             print("week clear")
-            sleep(.5)
+            # sleep(.5)
         while len(week) < len(all_teams) / 2: # while the week is not full, continue choosing, checking, adding games
             possible_games = find_games(all_games, week_index, checked_games[week_index])
             if len(possible_games) == 0: # if no games are possible
@@ -135,11 +136,11 @@ def add_next_game():
                 if not add_next_game(): # try to add next game, passing current path, and if it returns bad path    
                     remove_game(game, week_index) # remove just that game
     # check to make sure schedule has not been made yet
-    for a_schedule in schedules_list:
-        if a_schedule == schedule:
-            print("schedule exists")
-            return False
-    return True
+    if schedule_exists(schedule):
+        print("schedule exists")
+        return False
+    else:
+        return True
 
 def find_games(possible_games, week, checked_games): # determines which games are allowable
     scheduled_teams = []
@@ -176,7 +177,7 @@ def add_game(game, week): # adds a new game to the schedule
     away_games_per_team[game[1]] += 1
 
     print("Game added")
-    print("week %d" % week)
+    print("week %d" % (week + 1))
     print(schedule[week])
 
 def remove_game(game, week): # removes the first game added to all_games
@@ -190,7 +191,7 @@ def remove_game(game, week): # removes the first game added to all_games
     away_games_per_team[game[1]] -= 1
 
     print("Game removed.")
-    print("week %d" % week)
+    print("week %d" % (week + 1))
     print(schedule[week])
 
 def divisional_game(game): # checks if a matchup is a divisional game
@@ -210,6 +211,28 @@ def played_all_non_div_teams(team): # checks if team has played all non-division
         return True
     else:
         return False
+
+# custom schedule equality function
+def schedule_exists(check_schedule):
+    # loop through schedules
+    print('Checking schedule...')
+    for a_schedule in schedules_list: # for each saved schedule
+        i = 0
+        while i < len(a_schedule): # for each week in each schedule
+            for game in a_schedule[i]:# for each game in each week
+                # if that game is not in the correspondind week of schedule we are checking
+                if game not in check_schedule[i]:
+                    print(game, schedule[i])
+                    sleep(1)
+                    i = len(a_schedule) # change i to len(schedule) to end checking this schedule
+                    break
+            if i == len(a_schedule):
+                break
+            # all games were found in corresponding week, go to next week
+            i += 1
+        else: # all weeks in schedule found in checking schedule
+            return True
+    return False
 
 
 while True:
@@ -231,7 +254,7 @@ while True:
             f.truncate()
             # append copy of schedule to avoid having pointer to working
             # schedule existing in schedules_list
-            schedules_list.append(schedule.copy())
+            schedules_list.append(deepcopy(schedule))
             f.write(json.dumps(schedules_list))
         # remove the last game added from successful schedule
         remove_game(schedule[-1][-1], -1)
@@ -243,7 +266,7 @@ while True:
             if len(schedule[i]) > 0:
                 remove_game(schedule[i][-1], i)
                 print("removing game")
-                sleep(.5)
+                # sleep(.5)
                 break
             i -= 1
         else: # schedule is empty so no game removed
