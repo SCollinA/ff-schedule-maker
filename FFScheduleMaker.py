@@ -4,6 +4,8 @@ Also, a 16 team league cannot have more than 2 rounds of playoffs if only 2 divi
 """
 
 '''make program run through every possible schedule, saving each good one until all checked'''
+'''too many schedules, choose one random and add to saved list'''
+'''separate saved list into dictionary of saved lists corresponding to league sizes'''
 from random import choice
 from time import sleep
 import json
@@ -129,7 +131,7 @@ def add_next_game():
             possible_games = find_games(all_games, week_index, checked_games[week_index])
             if len(possible_games) == 0: # if no games are possible
                 return False
-            game = possible_games[0] # choose game for this week          
+            game = choice(possible_games) # choose game for this week          
             checked_games[week_index].append(game) # add game to checked_games for this week
             if check_game(game, week_index): # if game fits scheduling rules
                 add_game(game, week_index) # add game to schedule for that week
