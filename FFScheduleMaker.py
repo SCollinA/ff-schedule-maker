@@ -73,24 +73,67 @@ max_home_games = (weeks_of_regular_season / 2) if (weeks_of_regular_season % 2 =
 max_away_games= max_home_games # if odd number of games, some teams may have one more home game or away game
 
 schedule = []
+scheduled_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
+checked_games = []
 non_division_games_per_team = {}
 home_games_per_team = {}
 away_games_per_team = {}
 
 all_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
-scheduled_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
-checked_games = []
+for i in range(1, weeks_of_regular_season + 1):
+    schedule.append([]) # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
+    checked_games.append([])
 
 schedules_list = [] # empty list to hold completed schedules
+if not path.exists('schedules.json'):
+    with open('schedules.json', 'w') as f:
+        f.write(json.dumps(schedules_list))
+with open('schedules.json', 'r') as f:
+    schedules_list = json.loads(f.read())
+
+if len(schedules_list) > 0: # if there are schedules on file
+    print("schedule loaded")
+    sleep(1)
+    schedule = schedules_list[-1] # get the last schedule
+    for week in schedule:
+        for game in week: # and add all the games to scheduled games
+            scheduled_games.append(game)
+    # then if any game is in all the schedules, add to checked games
+    maybe_games = []
+    i = 0
+    j = 0
+    while i < len(schedule): # for each week of schedule
+        while j < len(schedule[0]): # for each game
+            # put each game from each schedule in a list
+            for a_schedule in schedules_list:
+                a_game = a_schedule[i][j]
+                maybe_games.append(a_game)
+            else:
+                # for first game in that list
+                for game in maybe_games:
+                    for other_game in maybe_games:
+                        if game is other_game:
+                            continue
+                        elif game is not other_game and game == other_game: # if same as other games
+                            continue
+                        else:
+                            maybe_games.clear()
+                            break
+                    else: # reach this statement
+                        checked_games[i].append(game)
+                        break            
+            j += 1
+        i += 1
+    print("Games checked")
+    print(checked_games)
+    sleep(5)
+
 
 for team in all_teams:
     non_division_games_per_team[team] = 0
     home_games_per_team[team] = 0 # max is number of total games / 2 or (num of games / 2) + 1 if odd num of games
     away_games_per_team[team] = 0
 
-for i in range(1, weeks_of_regular_season + 1):
-    schedule.append([]) # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
-    checked_games.append([])
 
 # for new recursive schedule maker
 # choose first game from possible games, remove
@@ -109,15 +152,17 @@ def add_next_game():
             possible_games = find_games(all_games, week_index, checked_games[week_index])
             if len(possible_games) == 0: # if no games are possible
                 return False
-            game = possible_games[0] # choose game for this week
-            if week_index == 0 and len(week) == 0:
-                print(game)
-                sleep(1)            
+            game = possible_games[0] # choose game for this week          
             checked_games[week_index].append(game) # add game to checked_games for this week
             if check_game(game, week_index): # if game fits scheduling rules
                 add_game(game, week_index) # add game to schedule for that week
                 if not add_next_game(): # try to add next game, passing current path, and if it returns bad path    
                     remove_game(game, week_index) # remove just that game
+    # check to make sure schedule has not been made yet
+    for a_schedule in schedules_list:
+        if a_schedule == schedule:
+            print("schedule exists")
+            return False
     return True
 
 def find_games(possible_games, week, checked_games): # determines which games are allowable
@@ -154,6 +199,10 @@ def add_game(game, week): # adds a new game to the schedule
     home_games_per_team[game[0]] += 1
     away_games_per_team[game[1]] += 1
 
+    print("Game added")
+    print("week %d" % week)
+    print(schedule[week])
+
 def remove_game(game, week): # removes the first game added to all_games
     #print("Removing game... " + str(game))
     schedule[week].remove(game)
@@ -163,6 +212,10 @@ def remove_game(game, week): # removes the first game added to all_games
         non_division_games_per_team[game[1]] -= 1
     home_games_per_team[game[0]] -= 1
     away_games_per_team[game[1]] -= 1
+
+    print("Game removed.")
+    print("week %d" % week)
+    print(schedule[week])
 
 def divisional_game(game): # checks if a matchup is a divisional game
     for division in league:
@@ -183,32 +236,42 @@ def played_all_non_div_teams(team): # checks if team has played all non-division
         return False
 
 
-while add_next_game(): # continue adding games to the schedule until it is complete
-    # print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
-    # sleep(5)
-    # continue
-# else:
-    # if you find a good schedule, write it to file
-    # if schedule is not in schedules file already
-    # create file if it doesn't exist, only first run
-    if not path.exists('schedules.json'):
-        with open('schedules.json', 'w') as f:
-            f.write(json.dumps(schedules_list))
-    # read file then truncate then append then write file
-    with open('schedules.json', 'r+') as f:
-        schedules_list = json.loads(f.read())
-        f.seek(0)
-        f.truncate()
-        if schedule not in schedules_list:
+while True:
+    if add_next_game(): # continue adding games to the schedule until it is complete
+        # print("Bad schedule") # if schedule makes it all the way back to empty, which it won't, try again
+        # sleep(5)
+        # continue
+    # else:
+        # if you find a good schedule, write it to file
+        # if schedule is not in schedules file already
+        # create file if it doesn't exist, only first run
+        print("Good schedule")
+        print(len(schedules_list))
+        sleep(1)
+        # read file then truncate then append then write file
+        with open('schedules.json', 'r+') as f:
+            schedules_list = json.loads(f.read())
+            f.seek(0)
+            f.truncate()
             # append copy of schedule to avoid having pointer to working
             # schedule existing in schedules_list
             schedules_list.append(schedule.copy())
-        f.write(json.dumps(schedules_list))
-    # remove the last game added from successful schedule
-    remove_game(schedule[-1][-1], -1)
-    # and begin adding games again
-    print(len(schedules_list))
-
+            f.write(json.dumps(schedules_list))
+        # remove the last game added from successful schedule
+        remove_game(schedule[-1][-1], -1)
+        # and try adding games again
+    else: # add next game failed, probably from half-made schedule
+         # remove the last game from the last week
+        i = len(schedule) - 1 # i equals last index of schedule
+        while i >= 0:
+            if len(schedule[i]) > 0:
+                remove_game(schedule[i][-1], i)
+                break
+            i -= 1
+        else: # schedule is empty so no game removed
+            break # all schedules found
+    
+            
 for division in league:
     print(division)
 for week in schedule:
