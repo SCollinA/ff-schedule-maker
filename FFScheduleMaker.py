@@ -96,37 +96,11 @@ if len(schedules_list) > 0: # if there are schedules on file
     sleep(1)
     schedule = schedules_list[-1] # get the last schedule
     for week in schedule:
+        i = 0
         for game in week: # and add all the games to scheduled games
             scheduled_games.append(game)
+            checked_games[i].append(game)
     # then if any game is in all the schedules, add to checked games
-    maybe_games = []
-    i = 0
-    j = 0
-    while i < len(schedule): # for each week of schedule
-        while j < len(schedule[0]): # for each game
-            # put each game from each schedule in a list
-            for a_schedule in schedules_list:
-                a_game = a_schedule[i][j]
-                maybe_games.append(a_game)
-            else:
-                # for first game in that list
-                for game in maybe_games:
-                    for other_game in maybe_games:
-                        if game is other_game:
-                            continue
-                        elif game is not other_game and game == other_game: # if same as other games
-                            continue
-                        else:
-                            maybe_games.clear()
-                            break
-                    else: # reach this statement
-                        checked_games[i].append(game)
-                        break            
-            j += 1
-        i += 1
-    print("Games checked")
-    print(checked_games)
-    sleep(5)
 
 
 for team in all_teams:
@@ -148,6 +122,8 @@ def add_next_game():
         week_index = schedule.index(week)
         if len(week) == 0: # new week beginning, clear checked games
             checked_games[week_index].clear()
+            print("week clear")
+            sleep(.5)
         while len(week) < len(all_teams) / 2: # while the week is not full, continue choosing, checking, adding games
             possible_games = find_games(all_games, week_index, checked_games[week_index])
             if len(possible_games) == 0: # if no games are possible
@@ -266,6 +242,8 @@ while True:
         while i >= 0:
             if len(schedule[i]) > 0:
                 remove_game(schedule[i][-1], i)
+                print("removing game")
+                sleep(.5)
                 break
             i -= 1
         else: # schedule is empty so no game removed
