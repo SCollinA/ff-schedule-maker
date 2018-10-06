@@ -75,6 +75,7 @@ max_non_division_games = weeks_of_regular_season - max_division_games
 max_home_games = (weeks_of_regular_season / 2) if (weeks_of_regular_season % 2 == 0) else ((weeks_of_regular_season / 2) + 1)
 max_away_games= max_home_games # if odd number of games, some teams may have one more home game or away game
 
+all_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
 schedule = []
 scheduled_games = [] # record of all teams that have played each other outside of division. should contain no duplicates
 checked_games = []
@@ -82,10 +83,17 @@ non_division_games_per_team = {}
 home_games_per_team = {}
 away_games_per_team = {}
 
-all_games = [[home_team, away_team] for home_team in all_teams for away_team in all_teams if home_team is not away_team]
-for i in range(1, weeks_of_regular_season + 1):
-    schedule.append([]) # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
-    checked_games.append([])
+def setup_schedule():
+    schedule.clear()
+    checked_games.clear()
+    scheduled_games.clear()
+    for _ in range(1, weeks_of_regular_season + 1):
+        schedule.append([]) # schedule is dictionary of weekly keys with lists of games as lists of two teams that week
+        checked_games.append([])
+    for team in all_teams:
+        non_division_games_per_team[team] = 0
+        home_games_per_team[team] = 0 # max is number of total games / 2 or (num of games / 2) + 1 if odd num of games
+        away_games_per_team[team] = 0
 
 schedules_list = [] # empty list to hold completed schedules
 if not path.exists('schedules.json'):
@@ -94,22 +102,18 @@ if not path.exists('schedules.json'):
 with open('schedules.json', 'r') as f:
     schedules_list = json.loads(f.read())
 
-if len(schedules_list) > 0: # if there are schedules on file
-    print("schedule loaded")
-    # sleep(1)
-    schedule = deepcopy(schedules_list[-1]) # get the last schedule
-    for week in schedule:
-        i = 0
-        for game in week: # and add all the games to scheduled games
-            scheduled_games.append(game)
-            checked_games[i].append(game)
+# if len(schedules_list) > 0: # if there are schedules on file
+#     print("schedule loaded")
+#     # sleep(1)
+#     schedule = deepcopy(schedules_list[-1]) # get the last schedule
+#     for week in schedule:
+#         i = 0
+#         for game in week: # and add all the games to scheduled games
+#             scheduled_games.append(game)
+#             checked_games[i].append(game)
     # then if any game is in all the schedules, add to checked games
 
 
-for team in all_teams:
-    non_division_games_per_team[team] = 0
-    home_games_per_team[team] = 0 # max is number of total games / 2 or (num of games / 2) + 1 if odd num of games
-    away_games_per_team[team] = 0
 
 
 # for new recursive schedule maker
@@ -237,6 +241,7 @@ def schedule_exists(check_schedule):
     return False
 
 while True:
+    setup_schedule()
     if add_next_game(): # continue adding games to the schedule until it is complete
         # check to make sure schedule has not been made yet
         if schedule_exists(schedule):
@@ -259,20 +264,20 @@ while True:
             schedules_list.append(deepcopy(schedule))
             f.write(json.dumps(schedules_list))
         # remove the last game added from successful schedule
-        remove_game(schedule[-1][-1], -1)
+        # remove_game(schedule[-1][-1], -1)
         # and try adding games again
-    else: # add next game failed, probably from half-made schedule
-         # remove the last game from the last week
-        i = len(schedule) - 1 # i equals last index of schedule
-        while i >= 0:
-            if len(schedule[i]) > 0:
-                remove_game(schedule[i][-1], i)
-                print("removing game")
-                # sleep(.5)
-                break
-            i -= 1
-        else: # schedule is empty so no game removed
-            break # all schedules found
+    # else: # add next game failed, probably from half-made schedule
+    #      # remove the last game from the last week
+    #     i = len(schedule) - 1 # i equals last index of schedule
+    #     while i >= 0:
+    #         if len(schedule[i]) > 0:
+    #             remove_game(schedule[i][-1], i)
+    #             print("removing game")
+    #             # sleep(.5)
+    #             break
+    #         i -= 1
+    #     else: # schedule is empty so no game removed
+    #         break # all schedules found
     
             
 for division in league:

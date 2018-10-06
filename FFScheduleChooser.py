@@ -30,4 +30,7 @@ with open('schedules.json', 'r') as f:
         print(team_schedule(schedule, schedule[0][0][0]))
         system('clear')
         i -= 1
+    schedule = choice(schedules_list)
+    # print(schedule_to_string(schedule))
+    print(team_schedule(schedule, schedule[0][0][0]))
 
