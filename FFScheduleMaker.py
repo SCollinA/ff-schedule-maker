@@ -199,8 +199,12 @@ else:
             schedules_list.append(schedule)
         print(len(schedules_list))
         f.write(json.dumps(schedules_list))
-for division in league:
-    print(league[division])
+
+team = choice(all_teams)
+print(team)
 for week in schedule:
-    print(week)
-    print(schedule[week])
+    for game in schedule[week]:
+        if team in game:
+            print(game)
+
+
