@@ -5,7 +5,7 @@ from os import system
 def schedule_to_string(schedule):
     schedule_string = ''
     for week in schedule:
-        schedule_string = schedule_string + 'Week %d' % schedule.index(week)
+        schedule_string = schedule_string + 'Week %d' % (schedule.index(week) + 1)
         for game in week:
             schedule_string = schedule_string + ' %s vs %s' % (game[0], game[1])
         schedule_string = schedule_string + '\n'
