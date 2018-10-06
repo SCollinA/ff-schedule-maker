@@ -228,7 +228,6 @@ def schedule_exists(check_schedule):
             for game in a_schedule[i]:# for each game in each week
                 # if that game is not in the correspondind week of schedule we are checking
                 if game not in check_schedule[i]: # games are different
-                    print(game, check_schedule[i]) # break and go to next schedule
                     i = len(a_schedule) # change i to len(schedule) to end checking this schedule
                     break
             if i == len(a_schedule):
@@ -240,18 +239,17 @@ def schedule_exists(check_schedule):
     # all schedules have been checked, no match found
     return False
 
-while True:
-    setup_schedule()
-    if add_next_game(): # continue adding games to the schedule until it is complete
-        # check to make sure schedule has not been made yet
-        if schedule_exists(schedule):
-            print("schedule exists")
-            remove_game(schedule[-1][-1], -1)
-            continue
+setup_schedule()
+if add_next_game(): # continue adding games to the schedule until it is complete
+    # check to make sure schedule has not been made yet
+    print("Good schedule")
+    if schedule_exists(schedule):
+        print("schedule exists")
+    else:
+        print("Truly unique!") # new schedule
         # if you find a good schedule, write it to file
         # if schedule is not in schedules file already
         # create file if it doesn't exist, only first run
-        print("Good schedule")
         print(len(schedules_list))
         sleep(1)
         # read file then truncate then append then write file
